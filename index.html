@@ -135,7 +135,7 @@
         <div class="character-section">
             <!-- 先用一个可爱的占位图 -->
             <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Felix" alt="你的伙伴" id="character-avatar">
-            <p id="character-dialogue">Hi，新同学！本周是你入职的第 1 周，和我聊聊你的心情吧？</p>
+            <p id="character-dialogue">Hi 又过去了一周，这周过的怎么样？和我聊聊吧～</p>
         </div>
 
         <div class="mood-section">
@@ -143,6 +143,20 @@
             <button class="mood-btn" data-mood="ok">😐<span>一般</span></button>
             <button class="mood-btn" data-mood="confused">😕<span>困惑</span></button>
             <button class="mood-btn" data-mood="sad">😭<span>难过</span></button>
+        </div>
+
+        <div class="input-section">
+            <label>这是我入职的：</label>
+            <select id="onboarding-week" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;">
+                <option value="1">第 1 周 (Freshman!)</option>
+                <option value="2">第 2 周</option>
+                <option value="3">第 3 周</option>
+                <option value="4">第 4 周 (满月啦!)</option>
+                <option value="8">第 2 个月</option>
+                <option value="12">第 3 个月 (关键期!)</option>
+                <option value="24">第 6 个月 (即将转正!)</option>
+                <option value="other">其他周数</option>
+            </select>
         </div>
 
         <div class="input-section">
@@ -165,38 +179,63 @@
         const avatar = document.getElementById('character-avatar');
 
         const responses = {
-            happy: "太棒了！看到你这么开心我也很有动力！✨",
-            ok: "平平淡淡才是真，下周也要继续加油哦！☕️",
-            confused: "没关系的，刚开始都会有点懵，我会一直陪着你！💪",
-            sad: "抱抱你...如果遇到了困难，一定要记得找身边的伙伴帮忙哦。❤️"
+            happy: "太棒了！看到你这周过得不错，我也被治愈了！✨",
+            ok: "平平淡淡也是一种幸福，下周也要继续加油哦！☕️",
+            confused: "没关系的，Landing 过程中总有迷茫，我会一直陪着你！💪",
+            sad: "抱抱你...如果这周过得不顺心，一定要记得找身边的伙伴倾诉哦。❤️"
         };
 
         moodBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // 移除其他按钮的激活状态
                 moodBtns.forEach(b => b.classList.remove('active'));
-                // 激活当前按钮
                 btn.classList.add('active');
-                
-                // 更新对话框内容
                 const mood = btn.getAttribute('data-mood');
                 dialogue.innerText = responses[mood];
-                
-                // 给头像加个小动画
                 avatar.style.transform = "scale(1.2)";
-                setTimeout(() => {
-                    avatar.style.transform = "scale(1)";
-                }, 300);
+                setTimeout(() => { avatar.style.transform = "scale(1)"; }, 300);
             });
         });
 
-        document.getElementById('submit-btn').addEventListener('click', () => {
+        document.getElementById('submit-btn').addEventListener('click', async () => {
             const name = document.getElementById('user-name').value;
+            const week = document.getElementById('onboarding-week').value;
+            const mood = document.querySelector('.mood-btn.active')?.getAttribute('data-mood') || 'none';
+            const feedback = document.getElementById('feedback-text').value;
+
             if (!name) {
                 alert('请先告诉我你的名字呀～');
                 return;
             }
-            alert('感谢 ' + name + ' 的分享！提交功能我们下一步来实现。祝你周末愉快！');
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = '正在发送给小伙伴...';
+
+            try {
+                // 这里请确保替换成你真正的机器人 Webhook 地址
+                const response = await fetch('https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=e5cf7ba8-6652-4a00-803c-162008b044ba', {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        "msgtype": "markdown",
+                        "markdown": {
+                            "content": `### ✨ 收到新的入职感受反馈\n> **员工姓名**：<font color=\"info\">${name}</font>\n> **入职阶段**：第 ${week} 周/阶段\n> **本周心情**：${mood === 'happy' ? '😊 开心' : mood === 'ok' ? '😐 一般' : mood === 'confused' ? '😕 困惑' : '😭 难过'}\n> **详细反馈**：${feedback || '无'}`
+                        }
+                    })
+                });
+
+                alert('感谢 ' + name + ' 的分享！收到啦，祝你周末愉快！✨');
+                document.getElementById('feedback-text').value = '';
+                document.getElementById('user-name').value = '';
+                moodBtns.forEach(b => b.classList.remove('active'));
+                dialogue.innerText = "Hi 又过去了一周，这周过的怎么样？和我聊聊吧～";
+            } catch (error) {
+                alert('发送失败了，请检查网络后再试～');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = '提交给小伙伴';
+            }
         });
     </script>
 </body>
