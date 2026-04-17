@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/knowledge-push",
+      "schedule": "0 3 * * 1"
+    },
+    {
+      "path": "/api/feedback-push",
+      "schedule": "30 9 * * 5"
+    }
+  ]
+}
